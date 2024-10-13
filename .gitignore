@@ -1,0 +1,9 @@
+/.idea
+/venv
+__pycache__/
+.env
+*.pyc
+test.py
+*.txt
+*.gz
+ptbmod.egg-info/PKG-INFO
