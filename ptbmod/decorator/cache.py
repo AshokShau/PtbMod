@@ -7,6 +7,8 @@ from cachetools.keys import hashkey
 from telegram import Chat, ChatMember, error
 from telegram.constants import ChatMemberStatus
 
+from ptbmod.config import Config
+
 # Admins stay cached for 20 minutes
 member_cache = TTLCache(maxsize=512, ttl=(60 * 20), timer=perf_counter)
 
@@ -52,4 +54,14 @@ def is_admin(member: ChatMember) -> bool:
     Returns:
         bool: True if the member is an admin or the owner.
     """
-    return member and member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER}
+    # If the member is None, return False
+    if not member:
+        return False
+
+    # If the member is a developer, return True
+    if member.user.id in Config.DEVS:
+        return True
+
+    # If the member is an administrator or the owner, return True
+    # Otherwise, return False
+    return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER}
