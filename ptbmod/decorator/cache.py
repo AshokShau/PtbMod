@@ -65,3 +65,26 @@ def is_admin(member: ChatMember) -> bool:
     # If the member is an administrator or the owner, return True
     # Otherwise, return False
     return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER}
+
+
+def is_owner(member: ChatMember) -> bool:
+    """
+    Checks if a ChatMember is the owner of the chat.
+
+    Args:
+        member (ChatMember): The member to check.
+
+    Returns:
+        bool: True if the member is the owner.
+    """
+    # If the member is None, return False
+    if not member:
+        return False
+
+    # If the member is a developer, return True
+    if member.user.id in Config.DEVS:
+        return True
+
+    # If the member is the owner, return True
+    # Otherwise, return False
+    return member.status == ChatMemberStatus.OWNER

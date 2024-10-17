@@ -33,8 +33,7 @@ setup(
     ],
     extras_require={
         'all': [
-            'cachetools',
-            'python-telegram-bot'
+            'python-telegram-bot[callback-data]',
         ],
     },
     keywords="telegram telegram-bot bot python-telegram-bot decorators command handling admin verification",

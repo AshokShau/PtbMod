@@ -1,21 +1,19 @@
 from functools import partial, wraps
 from typing import Any, Union, Callable, Optional, List
 
-from cachetools import TTLCache
 from telegram import (
     CallbackQuery,
     InlineKeyboardButton,
     InlineKeyboardMarkup,
     Message,
-    Update, ChatMemberOwner,
+    Update
 )
+
 from telegram.constants import ChatID, ChatType, ChatMemberStatus
 from telegram.ext import ContextTypes
 
 from ptbmod.config import Config
-from .cache import get_member_with_cache, is_admin
-
-ANON = TTLCache(maxsize=250, ttl=40)
+from .cache import get_member_with_cache, is_admin, is_owner
 
 
 async def verify_anonymous_admin(
@@ -30,21 +28,12 @@ async def verify_anonymous_admin(
     """
     callback = update.callback_query
     callback_id = int(f"{callback.message.chat.id}{callback.data.split('.')[1]}")
-
-    # Check if the button is valid
-    if callback_id not in ANON:
-        await callback.edit_message_text("Button has been expired")
-        return
-
-    # Get the message, function, and permissions from the cache
-    data = ANON.pop(callback_id)
-    if not data:
+    message, func, permissions = context.bot_data.pop(callback_id)
+    if not message:
         await callback.answer("Failed to get message", show_alert=True)
+        await callback.delete_message()
         return
 
-    message, func, permissions = data
-
-    # Get the user and bot's member information
     member = await get_member_with_cache(callback.message.chat, callback.from_user.id)
     bot = await get_member_with_cache(callback.message.chat, context.bot.id)
 
@@ -169,7 +158,7 @@ def Admins(
 
             # If the user is an anonymous admin, ask for verification
             if message.from_user.id == ChatID.ANONYMOUS_ADMIN and not no_reply:
-                ANON[int(f"{message.chat.id}{message.id}")] = (message, func, permissions)
+                context.bot_data[int(f"{message.chat.id}{message.id}")] = (message, func, permissions)
                 keyboard = InlineKeyboardMarkup(
                     [[InlineKeyboardButton(text="Verify Admin", callback_data=f"anon.{message.id}")]])
                 return await message.reply_text(
@@ -186,7 +175,7 @@ def Admins(
                 return await sender("Could not retrieve member information.")
 
             # If only_owner is True and the user is not the chat owner, return
-            if only_owner and not isinstance(user, ChatMemberOwner):
+            if only_owner and not is_owner(user):
                 if no_reply:
                     return None
                 return await sender("Only the chat owner can run this command.")
@@ -218,7 +207,7 @@ def Admins(
             if is_user:
                 check_permissions(user, permissions)
                 # If the user is missing any permissions, return
-                if missing_permissions:
+                if missing_permissions and not is_owner(user):
                     return await sender(f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
             if is_both:
@@ -235,7 +224,7 @@ def Admins(
                 missing_permissions.clear()  # Clear for user check
                 check_permissions(user, permissions)
                 # If the user is missing any permissions, return
-                if missing_permissions:
+                if missing_permissions and not is_owner(user):
                     return await sender(f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
             return await func(update, context, *args, **kwargs)
