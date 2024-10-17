@@ -6,7 +6,7 @@ load_dotenv()
 
 
 class Config:
-    HANDLER: List[str] = getenv("HANDLER", "/ ! + . $ #").split()
+    HANDLER: List[str] = getenv("HANDLER", "/ !").split()
     devs_env = getenv("DEVS")
     DEVS: List[int] = []
     if devs_env:

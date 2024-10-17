@@ -14,7 +14,7 @@ class NewCommandHandler(tg.CommandHandler):
         self,
         command: Union[str, list],
         callback,
-        prefix: Optional[List] = Config.HANDLER,
+        prefix: Optional[List] = None,
         **kwargs,
     ) -> None:
         """
@@ -27,7 +27,7 @@ class NewCommandHandler(tg.CommandHandler):
             **kwargs: Arbitrary keyword arguments.
         """
         if prefix is None:
-            prefix = ["/", "!"]
+            prefix = Config.HANDLER
         super().__init__(command, callback, **kwargs)
         self.prefix = prefix
 

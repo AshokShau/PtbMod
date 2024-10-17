@@ -18,7 +18,9 @@ from .cache import get_member_with_cache, is_admin
 ANON = TTLCache(maxsize=250, ttl=40)
 
 
-async def verify_anonymous_admin(update: Update, context: ContextTypes.DEFAULT_TYPE) -> Optional[Union[Message, bool]]:
+async def verify_anonymous_admin(
+    update: Update, context: ContextTypes.DEFAULT_TYPE
+) -> Optional[Union[Message, bool]]:
     """
     Verify anonymous admin permissions.
 
@@ -31,12 +33,16 @@ async def verify_anonymous_admin(update: Update, context: ContextTypes.DEFAULT_T
 
     # Check if the button is valid
     if callback_id not in ANON:
-        return await callback.edit_message_text("Button has been expired")
+        await callback.edit_message_text("Button has been expired")
+        return
 
     # Get the message, function, and permissions from the cache
-    message, func, permissions = ANON.pop(callback_id)
-    if not message:
-        return await callback.answer("Failed to get message", show_alert=True)
+    data = ANON.pop(callback_id)
+    if not data:
+        await callback.answer("Failed to get message", show_alert=True)
+        return
+
+    message, func, permissions = data
 
     # Get the user and bot's member information
     member = await get_member_with_cache(callback.message.chat, callback.from_user.id)
@@ -44,13 +50,16 @@ async def verify_anonymous_admin(update: Update, context: ContextTypes.DEFAULT_T
 
     # If the bot or user is None, return
     if bot is None or member is None:
-        return await callback.answer("Failed to get member", show_alert=True)
+        await callback.answer("Failed to get member", show_alert=True)
+        return
 
     # Check if the user and bot are admins
-    if not is_admin(bot) :
-        return await callback.answer("I need to be an admin to do this", show_alert=True)
+    if not is_admin(bot):
+        await callback.answer("I need to be an admin to do this", show_alert=True)
+        return
     if not is_admin(member):
-        return await callback.answer("You need to be an admin to do this", show_alert=True)
+        await callback.answer("You need to be an admin to do this", show_alert=True)
+        return
 
     # Check user permissions
     missing_permissions = []
@@ -70,7 +79,10 @@ async def verify_anonymous_admin(update: Update, context: ContextTypes.DEFAULT_T
     # If there are missing permissions, alert the user
     if missing_permissions and member.status != ChatMemberStatus.OWNER:
         missing_list = ", ".join(missing_permissions)
-        return await callback.answer(f"You do not have the required permissions: {missing_list}.", show_alert=True)
+        await callback.answer(
+            f"You do not have the required permissions: {missing_list}.", show_alert=True
+        )
+        return
     try:
         # Delete the message and call the function
         await callback.delete_message()
@@ -149,10 +161,8 @@ def Admins(
                     return await sender("This command can't be used in PM.")
 
             # If only_dev is True and the user is not the developer, return
-            if only_dev:
-                if user.id in Config.DEVS:
-                    return await func(update, context, *args, **kwargs)
-                elif no_reply:
+            if only_dev and user.id not in Config.DEVS:
+                if no_reply:
                     return None
                 else:
                     return await sender("This command can only be used by the developers.")
@@ -176,13 +186,10 @@ def Admins(
                 return await sender("Could not retrieve member information.")
 
             # If only_owner is True and the user is not the chat owner, return
-            if only_owner:
-                if isinstance(user, ChatMemberOwner):
-                    return await func(update, context, *args, **kwargs)
-                elif no_reply:
+            if only_owner and not isinstance(user, ChatMemberOwner):
+                if no_reply:
                     return None
-                else:
-                    return await sender("Only the chat owner can run this command.")
+                return await sender("Only the chat owner can run this command.")
 
             # If the bot or user is not an admin, return
             if is_bot and not is_admin(bot):
