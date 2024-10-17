@@ -1,14 +1,14 @@
 from os import getenv
+
 from dotenv import load_dotenv
-from typing import List
 
 load_dotenv()
 
 
 class Config:
-    HANDLER: List[str] = getenv("HANDLER", "/ !").split()
+    HANDLER: list[str] = getenv("HANDLER", "/ !").split()
     devs_env = getenv("DEVS")
-    DEVS: List[int] = []
+    DEVS: list[int] = []
     if devs_env:
         try:
             DEVS = list(map(int, devs_env.split()))
