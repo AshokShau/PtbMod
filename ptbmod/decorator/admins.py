@@ -8,7 +8,6 @@ from telegram import (
     Message,
     Update
 )
-
 from telegram.constants import ChatID, ChatType, ChatMemberStatus
 from telegram.ext import ContextTypes
 
@@ -17,7 +16,7 @@ from .cache import get_member_with_cache, is_admin, is_owner
 
 
 async def verifyAnonymousAdmin(
-    update: Update, context: ContextTypes.DEFAULT_TYPE
+        update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> Optional[Union[Message, bool]]:
     """
     Verify anonymous admin permissions.
@@ -52,6 +51,7 @@ async def verifyAnonymousAdmin(
 
     # Check user permissions
     missing_permissions = []
+
     def check_permissions(member_privileges, permissions_list):
         """
         Check if the user has the required permissions.
@@ -100,6 +100,7 @@ PERMISSION_ERROR_MESSAGES = {
     "can_manage_topics": "manage topics",
 }
 
+
 def Admins(
         permissions: Optional[Union[str, List[str]]] = None,
         is_bot: bool = False,
@@ -138,7 +139,8 @@ def Admins(
             user = update.effective_user
             bot = context.bot
             message: Union[CallbackQuery, Message] = update.effective_message
-            sender = partial(update.callback_query.answer, show_alert=True) if isinstance(update.callback_query, CallbackQuery) else update.effective_message.reply_text
+            sender = partial(update.callback_query.answer, show_alert=True) if isinstance(update.callback_query,
+                                                                                          CallbackQuery) else update.effective_message.reply_text
 
             # If the command is sent in a private message and allow_pm is False, return
             if message.chat.type == ChatType.PRIVATE and not only_dev:
@@ -162,8 +164,8 @@ def Admins(
                 keyboard = InlineKeyboardMarkup(
                     [[InlineKeyboardButton(text="Verify Admin", callback_data=f"anon.{message.id}")]])
                 return await message.reply_text(
-                         "Please verify that you are an admin to perform this action.",
-                          reply_markup=keyboard,
+                    "Please verify that you are an admin to perform this action.",
+                    reply_markup=keyboard,
                 )
 
             # Get the bot and user's member information
@@ -202,13 +204,15 @@ def Admins(
                 check_permissions(bot, permissions)
                 # If the bot is missing any permissions, return
                 if missing_permissions:
-                    return await sender(f"I don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
+                    return await sender(
+                        f"I don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
             if is_user:
                 check_permissions(user, permissions)
                 # If the user is missing any permissions, return
                 if missing_permissions and not is_owner(user):
-                    return await sender(f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
+                    return await sender(
+                        f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
             if is_both:
                 if not is_admin(bot):
@@ -219,13 +223,15 @@ def Admins(
                 check_permissions(bot, permissions)
                 # If the bot is missing any permissions, return
                 if missing_permissions:
-                    return await sender(f"I don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
+                    return await sender(
+                        f"I don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
                 missing_permissions.clear()  # Clear for user check
                 check_permissions(user, permissions)
                 # If the user is missing any permissions, return
                 if missing_permissions and not is_owner(user):
-                    return await sender(f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
+                    return await sender(
+                        f"You don't have permission to {', '.join(PERMISSION_ERROR_MESSAGES.get(p, p) for p in missing_permissions)}.")
 
             return await func(update, context, *args, **kwargs)
 
