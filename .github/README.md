@@ -28,8 +28,9 @@ pip install ptbmod[all]
 To utilize the new decorators and handlers, follow these steps:
 
 1. Import the necessary modules:
+
 ```python
-from ptbmod import TelegramHandler, verify_anonymous_admin, Admins
+from ptbmod import TelegramHandler, verifyAnonymousAdmin, Admins
 ```
 
 2. Create a `TelegramHandler` instance:
@@ -71,7 +72,7 @@ import logging
 from telegram import Message, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, filters, CallbackQueryHandler, Defaults
 
-from ptbmod import TelegramHandler, verify_anonymous_admin, Admins
+from ptbmod import TelegramHandler, verifyAnonymousAdmin, Admins
 from ptbmod.decorator.cache import get_member_with_cache
 
 logging.basicConfig(
@@ -79,7 +80,6 @@ logging.basicConfig(
     level=logging.INFO
 )
 logging.getLogger('httpx').setLevel(logging.WARNING)
-
 
 application = (
     ApplicationBuilder()
@@ -133,6 +133,7 @@ async def ban(update: Update, _: ContextTypes.DEFAULT_TYPE) -> Message:
             await msg.reply_text(f"Failed to ban user: {exc}")
             raise exc
 
+
 @Msg(filters=filters.ChatType.PRIVATE & ~filters.COMMAND)
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
@@ -147,7 +148,8 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         message_id=update.effective_message.message_id
     )
 
+
 if __name__ == '__main__':
-    application.add_handler(CallbackQueryHandler(verify_anonymous_admin, pattern=r"^anon."))
+    application.add_handler(CallbackQueryHandler(verifyAnonymousAdmin, pattern=r"^anon."))
     application.run_polling()
 ```

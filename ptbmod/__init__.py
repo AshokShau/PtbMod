@@ -9,10 +9,10 @@ __copyright__ = (
 print(f"Version: {__version__}\nCopyright: {__copyright__}")
 
 from .decorator import TelegramHandler
-from .decorator import verify_anonymous_admin, Admins
+from .decorator import verifyAnonymousAdmin, Admins
 
 __all__ = [
     "TelegramHandler",
-    "verify_anonymous_admin",
+    "verifyAnonymousAdmin",
     "Admins",
 ]

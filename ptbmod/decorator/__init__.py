@@ -1,4 +1,4 @@
-from .admins import Admins, verify_anonymous_admin
+from .admins import Admins, verifyAnonymousAdmin
 from .command import TelegramHandler
 from .handlers import NewCommandHandler, NewMessageHandler
 
@@ -7,5 +7,5 @@ __all__ = [
     "NewCommandHandler",
     "NewMessageHandler",
     "Admins",
-    "verify_anonymous_admin",
+    "verifyAnonymousAdmin",
 ]

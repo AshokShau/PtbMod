@@ -16,7 +16,7 @@ from ptbmod.config import Config
 from .cache import get_member_with_cache, is_admin, is_owner
 
 
-async def verify_anonymous_admin(
+async def verifyAnonymousAdmin(
     update: Update, context: ContextTypes.DEFAULT_TYPE
 ) -> Optional[Union[Message, bool]]:
     """
