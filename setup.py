@@ -16,7 +16,7 @@ with open(
     exec(f.read(), about)
 
 DESCRIPTION = 'Patch for python-telegram-bot providing decorator support for easy command handling and admin verification.'
-with open(".github/README.md", encoding="utf8") as readme:
+with open("README.md", encoding="utf8") as readme:
     long_description = readme.read()
 
 setup(
