@@ -1,6 +1,5 @@
 from collections.abc import Callable
 from functools import wraps, partial
-from pyexpat.errors import messages
 from typing import Optional, List, Union, Any
 
 from telegram import Update, Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
