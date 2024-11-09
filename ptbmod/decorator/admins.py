@@ -23,15 +23,15 @@ async def check_permissions(chat_id: int, user_id: int, permissions: Union[str, 
     """
     Check if a user has specific permissions.
     """
-    permissions = ensure_permissions_list(permissions)
-    if not permissions:
-        return True
-
     if await is_owner(chat_id, user_id):
         return True
 
     if not await is_admin(chat_id, user_id):
         return False
+
+    permissions = ensure_permissions_list(permissions)
+    if not permissions:
+        return True
 
     _, user_info = await get_admin_cache_user(chat_id, user_id)
     if not user_info:
