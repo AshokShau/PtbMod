@@ -13,6 +13,9 @@ class AdminCache:
         self.user_info = user_info
         self.cached = cached
 
+    def get_user_info(self, user_id: int) -> Optional[ChatMember]:
+        return next((user for user in self.user_info if user.user.id == user_id), None)
+
 
 async def load_admin_cache(bot: Bot, chat_id: int, force_reload: bool = False) -> tuple[bool, AdminCache]:
     """

@@ -6,6 +6,7 @@ from setuptools import setup, find_packages
 base_path = os.path.abspath(os.path.dirname(__file__))
 
 about: Dict = {}
+
 with open(
         os.path.join(
             base_path,
