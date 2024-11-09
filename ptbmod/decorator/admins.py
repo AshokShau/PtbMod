@@ -25,16 +25,16 @@ async def check_permissions(chat_id: int, user_id: int, permissions: Union[str, 
     if not permissions:
         return True
 
-    if is_owner(chat_id, user_id):
+    if await is_owner(chat_id, user_id):
         return True
 
-    if not is_admin(chat_id, user_id):
+    if not await is_admin(chat_id, user_id):
         return False
 
     _, user_info = await get_admin_cache_user(chat_id, user_id)
     if not user_info:
         return False
-
+    
     return all(getattr(user_info, perm, False) for perm in permissions)
 
 async def verifyAnonymousAdmin(
@@ -113,19 +113,23 @@ def Admins(
                     return None
                 return await sender("Only the chat owner can use this command.")
 
-            async def check_and_notify(subject_id, subject_name):
+            async def check_and_notify(subject_id, subject_name) -> bool | None:
                 if not await check_permissions(chat_id, subject_id, permissions):
                     if no_reply:
                         return None
-                    return await sender(f"{subject_name} lacks required permissions: {', '.join(permissions)}.")
+                    await sender(f"{subject_name} lacks required permissions: {', '.join(permissions)}.")
+                    return False
 
             if is_bot and not await check_and_notify(bot_id, "I"):
                 return None
             if is_user and not await check_and_notify(user_id, "You"):
                 return None
             if is_both:
-                if not await check_and_notify(user_id, "You") or not await check_and_notify(bot_id, "I"):
+                if not await check_and_notify(user_id, "You"):
                     return None
+                if not await check_and_notify(bot_id, "I"):
+                    return None
+
 
             return await func(update, context, *args, **kwargs)
 
