@@ -11,11 +11,11 @@ FilterDataDict = Dict[str, List[Any]]
 
 class NewCommandHandler(tg.CommandHandler):
     def __init__(
-        self,
-        command: Union[str, list],
-        callback,
-        prefix: Optional[List] = None,
-        **kwargs,
+            self,
+            command: Union[str, list],
+            callback,
+            prefix: Optional[List] = None,
+            **kwargs,
     ) -> None:
         """
         Initialize a NewCommandHandler.
@@ -37,7 +37,7 @@ class NewCommandHandler(tg.CommandHandler):
             self.commands = frozenset(x.lower() for x in command)
 
     def check_update(
-        self, update: object
+            self, update: object
     ) -> Optional[Union[bool, Tuple[List[str], Optional[Union[bool, FilterDataDict]]]]]:
         """
         Determines whether an update should be handled by this handler.
@@ -68,8 +68,8 @@ class NewCommandHandler(tg.CommandHandler):
                     # Check if the command is one of the commands this handler should listen for
                     # and if the bot name matches this bot's username
                     if (
-                        command_parts[0].lower() not in self.commands
-                        or command_parts[1].lower() != message.get_bot().username.lower()
+                            command_parts[0].lower() not in self.commands
+                            or command_parts[1].lower() != message.get_bot().username.lower()
                     ):
                         # If not, return None
                         return None
@@ -94,11 +94,11 @@ class NewCommandHandler(tg.CommandHandler):
 
 class NewMessageHandler(tg.MessageHandler):
     def __init__(
-        self,
-        filters,
-        callback,
-        block: Optional[bool] = True,
-        allow_edit: bool = False,
+            self,
+            filters,
+            callback,
+            block: Optional[bool] = True,
+            allow_edit: bool = False,
     ) -> None:
         """
         Initialize a NewMessageHandler.
@@ -113,6 +113,6 @@ class NewMessageHandler(tg.MessageHandler):
         if allow_edit is False:
             # If allow_edit is False, remove the filters for edited messages
             self.filters &= ~(
-                filters_module.UpdateType.EDITED_MESSAGE
-                | filters_module.UpdateType.EDITED_CHANNEL_POST
+                    filters_module.UpdateType.EDITED_MESSAGE
+                    | filters_module.UpdateType.EDITED_CHANNEL_POST
             )
