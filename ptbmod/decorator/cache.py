@@ -1,90 +1,72 @@
-from time import perf_counter
-from typing import Optional
+from typing import Optional, Tuple, List
 
 from cachetools import TTLCache
-from cachetools.keys import hashkey
+from telegram import ChatMember, ChatMemberOwner, ChatMemberAdministrator, Bot
 
-from telegram import Chat, ChatMember, error
-from telegram.constants import ChatMemberStatus
+# Initialize TTLCache with a max size and TTL (Time-to-live)
+admin_cache = TTLCache(maxsize=1000, ttl=15 * 60)  # 16 minutes TTL
 
-from ptbmod.config import Config
 
-# Admins stay cached for 20 minutes
-member_cache = TTLCache(maxsize=512, ttl=(60 * 20), timer=perf_counter)
+class AdminCache:
+    def __init__(self, chat_id: int, user_info: List[ChatMember], cached: bool = True):
+        self.chat_id = chat_id
+        self.user_info = user_info
+        self.cached = cached
 
-async def get_member_with_cache(
-        chat: Chat,
-        user_id: int,
-        force_reload: bool = False,
-) -> Optional[ChatMember]:
+    def get_user_info(self, user_id: int) -> Optional[ChatMember]:
+        return next((user for user in self.user_info if user.user.id == user_id), None)
+
+
+async def load_admin_cache(bot: Bot, chat_id: int, force_reload: bool = False) -> tuple[bool, AdminCache]:
     """
-    Get a chat member with caching to avoid hitting the API rate limit.
-
-    Args:
-        chat (Chat): The Chat object to get the member from.
-        user_id (int): The user id of the member to get.
-        force_reload (bool): Whether to force reloading the member from the API.
-            Defaults to False.
-
-    Returns:
-        Optional[Member]: The member if it is cached or if it is successfully retrieved
-            from the API, None otherwise.
+    Load the admin list from Telegram and cache it, unless already cached.
+    Set force_reload to True to bypass the cache and reload the admin list.
     """
-    cache_key = hashkey(chat.id, user_id)
-    if not force_reload and cache_key in member_cache:
-        return member_cache[cache_key]
+    # Check if the cache is already populated for the chat_id
+    if not force_reload and chat_id in admin_cache:
+        return True, admin_cache[chat_id]  # Return the cached data if available and reload not forced
 
     try:
-        member = await chat.get_member(user_id)
-    except (error.BadRequest, error.Forbidden):
-        return None
+        # Retrieve and cache the admin list
+        admin_list = list(await bot.get_chat_administrators(chat_id))
+        admin_cache[chat_id] = AdminCache(chat_id, admin_list)
+        return True, admin_cache[chat_id]
     except Exception as e:
-        raise e
+        print(f"Error loading admin cache for chat_id {chat_id}: {e}")
+        # Return an empty AdminCache with `cached=False` if there was an error
+        return False, AdminCache(chat_id, [], cached=False)
 
-    member_cache[cache_key] = member
-    return member
 
-def is_admin(member: ChatMember) -> bool:
+async def get_admin_cache_user(chat_id: int, user_id: int) -> Tuple[bool, Optional[ChatMember]]:
     """
-    Checks if a ChatMember is an admin or the owner of the chat.
-
-    Args:
-        member (ChatMember): The member to check.
-
-    Returns:
-        bool: True if the member is an admin or the owner.
+    Check if the user is an admin using cached data.
     """
-    # If the member is None, return False
-    if not member:
-        return False
+    admin_list = admin_cache.get(chat_id)
+    if admin_list is None:
+        return False, None  # Cache miss; admin list not available
 
-    # If the member is a developer, return True
-    if member.user.id in Config.DEVS:
-        return True
+    for user_info in admin_list.user_info:
+        if user_info.user.id == user_id:
+            return True, user_info  # User is an admin in the cached list
 
-    # If the member is an administrator or the owner, return True
-    # Otherwise, return False
-    return member.status in {ChatMemberStatus.ADMINISTRATOR, ChatMemberStatus.OWNER}
+    return False, None  # User is not found in the cached admin list
 
 
-def is_owner(member: ChatMember) -> bool:
+async def is_owner(chat_id: int, user_id: int) -> bool:
     """
-    Checks if a ChatMember is the owner of the chat.
-
-    Args:
-        member (ChatMember): The member to check.
-
-    Returns:
-        bool: True if the member is the owner.
+    Check if the user is the owner of the chat.
     """
-    # If the member is None, return False
-    if not member:
-        return False
+    is_cached, user_info = await get_admin_cache_user(chat_id, user_id)
+    if is_cached and isinstance(user_info, ChatMemberOwner):
+        return True  # User is the owner of the chat in cached data
+    return False
 
-    # If the member is a developer, return True
-    if member.user.id in Config.DEVS:
-        return True
 
-    # If the member is the owner, return True
-    # Otherwise, return False
-    return member.status == ChatMemberStatus.OWNER
+async def is_admin(chat_id: int, user_id: int) -> bool:
+    """
+    Check if the user is an admin (including the owner) in the chat.
+    """
+    is_cached, user_info = await get_admin_cache_user(chat_id, user_id)
+    if is_cached and (isinstance(user_info, ChatMemberAdministrator) or isinstance(user_info, ChatMemberOwner)):
+        return True  # User is an admin or owner in the cached data
+    return False

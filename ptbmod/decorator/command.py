@@ -25,14 +25,14 @@ class TelegramHandler:
         self.app = application
 
     def command(
-        self,
-        command: List[str],
-        filters: Optional[filters_module.BaseFilter] = None,
-        block: Optional[bool] = True,
-        has_args: Optional[Union[bool, int]] = None,
-        group: Optional[int] = 0,
-        allow_edit: Optional[Union[bool, bool]] = False,
-        prefix: Optional[List[str]] = None,
+            self,
+            command: List[str],
+            filters: Optional[filters_module.BaseFilter] = None,
+            block: Optional[bool] = True,
+            has_args: Optional[Union[bool, int]] = None,
+            group: Optional[int] = 0,
+            allow_edit: Optional[Union[bool, bool]] = False,
+            prefix: Optional[List[str]] = None,
     ) -> Callable[[Any], None]:
         """
         A decorator to add a CommandHandler to the Telegram Application.
@@ -87,11 +87,11 @@ class TelegramHandler:
         return _command
 
     def message(
-        self,
-        filters: BaseFilter | None = None,
-        block: Optional[bool] = True,
-        allow_edit: Optional[Union[bool, bool]] = False,
-        group: Optional[int] = 0,
+            self,
+            filters: BaseFilter | None = None,
+            block: Optional[bool] = True,
+            allow_edit: Optional[Union[bool, bool]] = False,
+            group: Optional[int] = 0,
     ) -> Callable[[Any], None]:
         """
         A decorator to add a MessageHandler to the Telegram Application.
@@ -106,6 +106,7 @@ class TelegramHandler:
         Returns:
             A decorator that adds the MessageHandler to the Telegram Application.
         """
+
         def _message(func) -> None:
             """
             A decorator to add a MessageHandler to the Telegram Application.
@@ -134,7 +135,7 @@ class TelegramHandler:
         return _message
 
     def callback_query(
-        self, pattern: str = None, block: Optional[bool] = True
+            self, pattern: str = None, block: Optional[bool] = True
     ) -> Callable[[Any], None]:
         """
         A decorator to add a CallbackQueryHandler to the Telegram Application.
@@ -146,6 +147,7 @@ class TelegramHandler:
         Returns:
             A decorator that adds the CallbackQueryHandler to the Telegram Application.
         """
+
         def _callback_query(func) -> None:
             """
             A decorator to add a CallbackQueryHandler to the Telegram Application.
@@ -170,10 +172,10 @@ class TelegramHandler:
         return _callback_query
 
     def inline_query(
-        self,
-        pattern: Optional[Union[str, Pattern[str]]] = None,
-        block: Optional[bool] = True,
-        chat_types: Optional[List[str]] = None,
+            self,
+            pattern: Optional[Union[str, Pattern[str]]] = None,
+            block: Optional[bool] = True,
+            chat_types: Optional[List[str]] = None,
     ) -> Callable[[Any], None]:
         """
         A decorator to add an InlineQueryHandler to the Telegram Application.
@@ -186,6 +188,7 @@ class TelegramHandler:
         Returns:
             A decorator that adds the InlineQueryHandler to the Telegram Application.
         """
+
         def _inline_query(func) -> None:
             """
             A decorator to add an InlineQueryHandler to the Telegram Application.
@@ -210,10 +213,10 @@ class TelegramHandler:
         return _inline_query
 
     def chat_member(
-        self,
-        chat_member_types: int = -1,
-        block: Optional[bool] = True,
-        group: Optional[int] = 0,
+            self,
+            chat_member_types: int = -1,
+            block: Optional[bool] = True,
+            group: Optional[int] = 0,
     ) -> Callable[[Any], None]:
         """
         A decorator to add a ChatMemberHandler to the Telegram Application.

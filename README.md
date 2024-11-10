@@ -73,7 +73,7 @@ from telegram import Message, Update
 from telegram.ext import ApplicationBuilder, ContextTypes, filters, CallbackQueryHandler, Defaults
 
 from ptbmod import TelegramHandler, verifyAnonymousAdmin, Admins
-from ptbmod.decorator.cache import get_member_with_cache
+from ptbmod.decorator.cache import is_admin
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
@@ -100,7 +100,7 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     """
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text="I'm a bot, please talk to me!"
+        text="Hello! I am a bot.\nUse /kick to kick a user from the chat."
     )
 
 
@@ -110,28 +110,18 @@ async def ban(update: Update, _: ContextTypes.DEFAULT_TYPE) -> Message:
     """
     Kick a user from the chat.
     """
-    # Get the incoming message and the reply message
     msg = update.effective_message
     reply = msg.reply_to_message
     chat = update.effective_chat
-
-    # Check if there is a reply message
-    if reply:
-        # Get the user details
-        user = await get_member_with_cache(chat, reply.from_user.id)
-        # If user not found, send a message and return
-        if not user:
-            return await msg.reply_text("I can't find that user")
-
-        user_id = user.user.id
-        try:
-            # Kick the user
-            await chat.unban_member(user_id)
-            await msg.reply_text(f"Kicked user {user.user.full_name}")
-        except Exception as exc:
-            # Handle ban failure
-            await msg.reply_text(f"Failed to ban user: {exc}")
-            raise exc
+    if not reply:
+        return await msg.reply_text("Please reply to a user to kick them.")
+    
+    user = reply.from_user
+    if await is_admin(chat.id, user.id):
+        return await msg.reply_text("You can't kick an admin.")
+    
+    await chat.unban_member(user.id)
+    return await msg.reply_text(f"Kicked user {user.full_name}")
 
 
 @Msg(filters=filters.ChatType.PRIVATE & ~filters.COMMAND)
@@ -140,8 +130,6 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     Send a message with the same text as the user's message in a private chat when the
     message is not a command.
     """
-    # Copy the message from the user in the same private chat
-    # This is done to echo the message back to the user
     await context.bot.copy_message(
         chat_id=update.effective_chat.id,
         from_chat_id=update.effective_chat.id,
