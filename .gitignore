@@ -7,3 +7,4 @@ test.py
 *.txt
 *.gz
 ptbmod.egg-info/PKG-INFO
+bot_data.pickle
