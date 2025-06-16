@@ -3,8 +3,7 @@ from typing import Optional, Tuple, List
 from cachetools import TTLCache
 from telegram import ChatMember, ChatMemberOwner, ChatMemberAdministrator, Bot
 
-# Initialize TTLCache with a max size and TTL (Time-to-live)
-admin_cache = TTLCache(maxsize=1000, ttl=15 * 60)  # 16 minutes TTL
+admin_cache = TTLCache(maxsize=1000, ttl=15 * 60)
 
 
 class AdminCache:

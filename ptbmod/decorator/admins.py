@@ -2,6 +2,7 @@ from collections.abc import Callable
 from functools import wraps, partial
 from typing import Optional, Union, Any
 
+from cachetools import TTLCache
 from telegram import Update, Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from telegram.constants import ChatID, ChatType
 from telegram.ext import ContextTypes
@@ -9,6 +10,7 @@ from telegram.ext import ContextTypes
 from .cache import get_admin_cache_user, is_admin, is_owner, load_admin_cache
 from ..config import Config
 
+AnonymousAdmin = TTLCache(maxsize=250, ttl=60)
 
 def ensure_permissions_list(permissions: Union[str, list[str]]) -> list[str]:
     """
@@ -45,21 +47,26 @@ async def verifyAnonymousAdmin(
 ) -> Optional[Union[Message, bool]]:
     callback = update.callback_query
     callback_id = int(f"{callback.message.chat.id}{callback.data.split('.')[1]}")
-    message, func, permissions = context.bot_data.pop(callback_id, (None, None, None))
+    if callback_id not in AnonymousAdmin:
+        await callback.answer("Button expired", show_alert=True)
+        await callback.delete_message()
+        return None
+
+    message, func, permissions = AnonymousAdmin.pop(callback_id)
 
     if not message:
         await callback.answer("Failed to get message", show_alert=True)
         await callback.delete_message()
-        return
+        return None
 
     if not await check_permissions(message.chat.id, callback.from_user.id, permissions):
         await callback.answer("You don't have the required permissions.", show_alert=True)
-        await callback.delete_message()
-        return
+        return None
 
     try:
         await callback.delete_message()
         await func(update, context)
+        return None
     except Exception as e:
         raise e
 
@@ -107,7 +114,7 @@ def Admins(
                 return await sender("I need to be an admin to do this.")
 
             if message.from_user.id == ChatID.ANONYMOUS_ADMIN and not no_reply:
-                context.bot_data[int(f"{message.chat.id}{message.id}")] = (message, func, permissions)
+                AnonymousAdmin[int(f"{message.chat.id}{message.id}")] = (message, func, permissions)
                 keyboard = InlineKeyboardMarkup(
                     [[InlineKeyboardButton(text="Verify Admin", callback_data=f"anon.{message.id}")]])
                 return await message.reply_text(
